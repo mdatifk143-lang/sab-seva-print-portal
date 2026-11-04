@@ -38,6 +38,7 @@ footer{text-align:center;padding:20px;color:#64748b}a{color:#1257a5}.field-label
 <label>Email</label><input id="regEmail" type="email"><label>Password</label><input id="regPassword" type="password" minlength="6">
 <button onclick="register()">Register</button><button class="secondary" onclick="showLogin()">Back to Login</button>
 </section>
+
 <section id="dashboard" class="hidden">
 <div class="box"><h2>Retailer Dashboard</h2><p id="retailerName"></p><h3>Wallet Balance</h3>
 <div id="walletBalance" class="wallet">₹0.00</div>
@@ -45,16 +46,18 @@ footer{text-align:center;padding:20px;color:#64748b}a{color:#1257a5}.field-label
 <button onclick="showSection('servicesSection')">Services</button>
 <button onclick="showSection('applicationsSection')">My Applications</button>
 <button class="secondary" onclick="logout()">Logout</button></div>
+
 <section id="addMoney" class="box hidden"><h2>Add Money — PhonePe</h2>
 <div class="payment-area"><h3>Scan & Pay — PhonePe</h3>
-<img src="https://mdatifk143-lang.github.io/sab-seva-print-portal/phonepe-qr.jpg" alt="PhonePe QR" class="qr" onerror="this.style.display='none';document.getElementById('qrError').style.display='block'">
-<p id="qrError" style="display:none;color:red">QR नहीं मिली। GitHub पर phonepe-qr.jpg फाइल का नाम और Pages URL जाँचें।</p></div>
+<img src="phonepe-qr.jpg" alt="PhonePe QR" class="qr" onerror="this.style.display='none';document.getElementById('qrError').style.display='block'">
+<p id="qrError" style="display:none;color:red">QR नहीं मिली। phonepe-qr.jpg को index.html के साथ रखें।</p></div>
 <div class="notice">Receiver का नाम Verify करें। Payment के बाद UTR और Screenshot अपलोड करें। Admin Approval के बाद Wallet बढ़ेगा।</div>
 <label>Amount ₹</label><input id="payAmount" type="number" min="1" step="1">
 <label>UTR / Transaction ID</label><input id="payUtr">
 <label>Payment Screenshot</label><input id="payScreenshot" type="file" accept="image/jpeg,image/png,image/webp">
 <button id="paySubmitBtn" onclick="submitPayment()">Submit Payment Request</button>
 <button class="secondary" onclick="showSection('servicesSection')">Back</button></section>
+
 <section id="servicesSection" class="box"><h2>Our Services</h2><div id="servicesGrid" class="grid">Loading...</div></section>
 <section id="serviceDetails" class="box hidden"><h2 id="selectedServiceName"></h2><p id="selectedServiceRate"></p>
 <div id="serviceNotice" class="notice"></div><form id="serviceForm"><div id="serviceFields"></div>
@@ -63,15 +66,18 @@ footer{text-align:center;padding:20px;color:#64748b}a{color:#1257a5}.field-label
 <p id="formResult" role="status"></p></section>
 <section id="applicationsSection" class="box hidden"><h2>My Applications</h2><div id="applicationList">Loading...</div></section>
 </section>
+
 <section class="box"><h3>Customer Support</h3><p>किसी समस्या पर WhatsApp करें।</p>
 <a href="https://wa.me/918986563184" target="_blank" rel="noopener">WhatsApp: 8986563184</a></section>
 </main><footer>© Sab Seva Print Portal</footer>
+
 <script>
 const SUPABASE_URL='https://nvpujnviuaqhncayfklz.supabase.co';
 const SUPABASE_KEY='sb_publishable_nHUllQOMS5anr8FqfoyCyw_GxNDu6gq';
 const $=id=>document.getElementById(id);
 let db=null,currentUser=null,currentServices=[],selectedService=null,submitting=false;
 let pendingPanRequestId=null,pendingOtherRequestId=null;
+
 try{db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)}catch(e){console.error(e)}
 function message(t,bad=false){$('message').textContent=t;$('message').style.color=bad?'#b91c1c':'#166534'}
 function formMessage(t,bad=false){$('formResult').textContent=t;$('formResult').style.color=bad?'#b91c1c':'#166534'}
@@ -84,6 +90,7 @@ function showSection(id){
  if(id==='applicationsSection')loadApplications();
 }
 function checkClient(){if(!db){message('Supabase Connection Error',true);return false}return true}
+
 async function register(){
  if(!checkClient())return;
  const name=$('regName').value.trim(),email=$('regEmail').value.trim(),password=$('regPassword').value;
@@ -130,6 +137,7 @@ async function loadWallet(){
  const {data,error}=await db.from('customer_wallets').select('balance_paise').eq('user_id',currentUser.id).maybeSingle();
  $('walletBalance').textContent=error?'Unavailable':'₹'+(Number(data?.balance_paise||0)/100).toFixed(2);
 }
+
 const fallbackServices=[
  {service_code:'new_pan',service_name:'New PAN Card',rate_paise:18000,status:'available'},
  {service_code:'pan_correction',service_name:'PAN Card Correction',rate_paise:18000,status:'available'},
@@ -156,6 +164,7 @@ async function loadServices(){
   box.append(h,p,badge,document.createElement('br'),btn);grid.appendChild(box);
  }
 }
+
 const common=[['Customer Name','text','customer_name'],['Mobile Number','tel','mobile']];
 const serviceForms={
  new_pan:[
@@ -166,7 +175,7 @@ const serviceForms={
  pan_correction:[
   ['Customer Name','text','customer_name'],['PAN Number','text','pan_number'],['Father Name','text','father_name'],
   ['Date of Birth','date','dob'],['Mobile Number','tel','mobile'],
-  ['Correction Type','select','correction_type',['Name Correction','Father Name Correction','Date of Birth Correction','Photo Correction','Signature Correction','Address Correction']],
+  ['Correction Type','select','correction_type',['Name','Father Name','Date of Birth','Address','Photo','Signature','Other']],
   ['Correct Details','textarea','correct_details'],['Full Address','textarea','address'],
   ['Aadhaar Document','file','aadhaar'],['Photo','file','photo'],['Signature','file','signature']
  ],
@@ -233,6 +242,7 @@ function openService(s){
  showSection('serviceDetails');message('');
 }
 function fileExt(type){return {'image/jpeg':'jpg','image/png':'png','image/webp':'webp','application/pdf':'pdf'}[type]}
+
 async function uploadServiceFiles(form,requestId,values,requiredKeys){
  const files={};
  for(const input of form.querySelectorAll('input[type="file"]')){
@@ -307,9 +317,56 @@ $('serviceForm').addEventListener('submit',async function(e){
  if(!confirm(selectedService.service_name+' Application Submit करें? Wallet से निर्धारित फीस कटेगी।'))return;
  await submitOtherService(this);
 });
+
 async function submitPayment(){
  if(!currentUser)return message('पहले Login करें।',true);
  const amount=Number($('payAmount').value),utr=$('payUtr').value.trim(),file=$('payScreenshot').files[0];
  if(!Number.isSafeInteger(amount)||amount<1||amount>1000000)return message('सही Amount डालें।',true);
  if(!utr||!file)return message('UTR और Screenshot जरूरी हैं।',true);
- const
+ const ext=fileExt(file.type);
+ if(!['jpg','png','webp'].includes(ext)||file.size>5*1024*1024)return message('JPG/PNG/WebP Screenshot 5 MB तक डालें।',true);
+ const btn=$('paySubmitBtn');btn.disabled=true;btn.textContent='Submitting...';
+ try{
+  const path=currentUser.id+'/'+crypto.randomUUID()+'.'+ext;
+  const {error:ue}=await db.storage.from('payment-screenshots').upload(path,file,{contentType:file.type,upsert:false});
+  if(ue)throw ue;
+  const {error:ie}=await db.from('payment_requests').insert({user_id:currentUser.id,amount_paise:amount*100,utr,screenshot_path:path,status:'pending'});
+  if(ie)throw ie;
+  message('Payment Request जमा हो गई। Admin Approval का इंतजार करें।');
+  $('payAmount').value='';$('payUtr').value='';$('payScreenshot').value='';
+ }catch(e){message('Payment Request Error: '+e.message,true)}
+ finally{btn.disabled=false;btn.textContent='Submit Payment Request'}
+}
+async function loadApplications(){
+ const list=$('applicationList');if(!currentUser){list.textContent='Login Required';return}
+ list.textContent='Loading...';
+ const {data,error}=await db.from('service_applications').select('id,service_name,customer_name,status,created_at').eq('retailer_id',currentUser.id).order('created_at',{ascending:false}).limit(30);
+ if(error){list.textContent='Applications Load Error: '+error.message;return}
+ if(!data?.length){list.textContent='अभी कोई Application नहीं है।';return}
+ list.replaceChildren();
+ for(const app of data){
+  const box=document.createElement('div');box.className='box';
+  const h=document.createElement('h3');h.textContent=app.service_name||'Service';
+  const p=document.createElement('p');p.textContent='Customer: '+(app.customer_name||'-')+' | Status: '+(app.status||'Pending');
+  const btn=document.createElement('button');btn.textContent='Download PDF';btn.onclick=()=>downloadSlip(app.id);
+  box.append(h,p,btn);list.appendChild(box);
+ }
+}
+async function downloadSlip(id){
+ try{
+  const {data,error}=await db.from('application_slips').select('file_path,sent_at').eq('application_id',id).maybeSingle();
+  if(error)throw error;
+  if(!data?.sent_at||!data?.file_path)return message('Admin ने अभी PDF नहीं भेजी है।',true);
+  const {data:link,error:le}=await db.storage.from('application-slips').createSignedUrl(data.file_path,60);
+  if(le)throw le;window.open(link.signedUrl,'_blank','noopener,noreferrer');
+ }catch(e){message('PDF Error: '+e.message,true)}
+}
+async function start(){
+ if(!checkClient())return;
+ const {data}=await db.auth.getUser();
+ if(data?.user){currentUser=data.user;await openDashboard()}else showLogin();
+}
+window.addEventListener('load',start);
+</script>
+</body>
+</html>
